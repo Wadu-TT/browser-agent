@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Browser Agent</title>
+  <meta name="description" content="AI-powered browser automation agent — control any website with natural language instructions." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #12121a;
+      --surface-2: #1a1a26;
+      --border: #2a2a3d;
+      --accent: #7c3aed;
+      --accent-glow: rgba(124, 58, 237, 0.25);
+      --accent-2: #06b6d4;
+      --text: #e2e8f0;
+      --text-muted: #64748b;
+      --success: #10b981;
+      --error: #ef4444;
+      --warning: #f59e0b;
+      --radius: 12px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      background-image:
+        radial-gradient(ellipse at 20% 50%, rgba(124, 58, 237, 0.08) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, rgba(6, 182, 212, 0.06) 0%, transparent 50%);
+    }
+
+    /* ── Header ── */
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 1.2rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: rgba(18, 18, 26, 0.8);
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+
+    header h1 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      background: linear-gradient(90deg, var(--text), var(--accent-2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .badge {
+      margin-left: auto;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    .badge .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--success);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* ── Layout ── */
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem;
+    }
+
+    .hero {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .hero h2 {
+      font-size: 2.4rem;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 0.75rem;
+      background: linear-gradient(135deg, var(--text) 0%, var(--accent-2) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      color: var(--text-muted);
+      font-size: 1rem;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .card-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 1rem;
+    }
+
+    /* ── Form ── */
+    label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 0.4rem;
+    }
+
+    .field { margin-bottom: 1.2rem; }
+
+    input[type="text"],
+    input[type="url"],
+    textarea {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.9rem;
+      padding: 0.7rem 1rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus, textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    textarea { resize: vertical; min-height: 80px; }
+
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+    @media (max-width: 600px) { .row { grid-template-columns: 1fr; } }
+
+    .hint {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 0.3rem;
+    }
+
+    /* ── Examples ── */
+    .examples {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .example-btn {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      padding: 5px 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .example-btn:hover {
+      border-color: var(--accent);
+      color: var(--text);
+      background: var(--accent-glow);
+    }
+
+    /* ── Button ── */
+    #run-btn {
+      width: 100%;
+      padding: 0.875rem;
+      background: linear-gradient(135deg, var(--accent), #5b21b6);
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #run-btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 25px rgba(124, 58, 237, 0.4);
+    }
+
+    #run-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* ── Status / Result ── */
+    #status-section { display: none; }
+
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.9rem 1.2rem;
+      border-radius: 10px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      margin-bottom: 1rem;
+      font-size: 0.875rem;
+    }
+
+    .status-bar.running { border-color: var(--accent); }
+    .status-bar.success { border-color: var(--success); }
+    .status-bar.error { border-color: var(--error); }
+
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .status-icon { font-size: 16px; flex-shrink: 0; }
+
+    .result-box {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.2rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 300px;
+      overflow-y: auto;
+      color: var(--text);
+    }
+
+    /* ── Action Log ── */
+    .steps-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+
+    .step-count {
+      background: var(--accent);
+      color: white;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+
+    .action-log {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      max-height: 350px;
+      overflow-y: auto;
+    }
+
+    .action-item {
+      display: flex;
+      gap: 0.75rem;
+      padding: 0.6rem 0.8rem;
+      background: var(--surface-2);
+      border-radius: 8px;
+      border-left: 3px solid var(--border);
+      font-size: 0.8rem;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .action-item.click    { border-color: var(--accent); }
+    .action-item.navigate { border-color: var(--accent-2); }
+    .action-item.type_text{ border-color: var(--warning); }
+    .action-item.extract_text { border-color: var(--success); }
+    .action-item.scroll   { border-color: var(--text-muted); }
+    .action-item.done     { border-color: var(--success); }
+
+    .step-num {
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+      flex-shrink: 0;
+      min-width: 28px;
+    }
+
+    .action-type {
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      flex-shrink: 0;
+      min-width: 80px;
+    }
+
+    .action-detail { color: var(--text-muted); }
+
+    /* Scrollbar styling */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🤖</div>
+  <h1>AI Browser Agent</h1>
+  <div class="badge">
+    <span class="dot"></span>
+    <span id="header-model-badge">Groq Agent</span>
+  </div>
+</header>
+
+<div class="container">
+  <!-- Hero -->
+  <div class="hero">
+    <h2>Browse the Web with AI</h2>
+    <p>Give a natural language task — the agent navigates, clicks, types, and extracts data automatically.</p>
+  </div>
+
+  <!-- Task Form -->
+  <div class="card">
+    <div class="card-title">🎯 New Task</div>
+
+    <div class="field">
+      <label>Quick Examples</label>
+      <div class="examples" id="examples"></div>
+    </div>
+
+    <div class="field">
+      <label for="task-input">Task Description</label>
+      <textarea id="task-input" placeholder="e.g. Go to books.toscrape.com and list the top 5 books with their prices"></textarea>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label for="url-input">Start URL</label>
+        <input type="url" id="url-input" value="https://books.toscrape.com" />
+        <div class="hint">The page the agent opens first</div>
+      </div>
+      <div class="field">
+        <label for="steps-input">Max Steps</label>
+        <input type="text" id="steps-input" value="20" />
+        <div class="hint">Prevent infinite loops (5–30)</div>
+      </div>
+    </div>
+
+    <button id="run-btn" onclick="runTask()">
+      <span id="btn-icon">▶</span>
+      <span id="btn-text">Run Agent</span>
+    </button>
+  </div>
+
+  <!-- Status + Results -->
+  <div id="status-section">
+    <div id="status-bar" class="status-bar">
+      <div class="spinner" id="spinner"></div>
+      <span id="status-text">Starting agent...</span>
+    </div>
+
+    <div class="card" id="result-card" style="display:none">
+      <div class="card-title">📋 Result</div>
+      <div class="result-box" id="result-text"></div>
+    </div>
+
+    <div class="card" id="log-card" style="display:none">
+      <div class="steps-header">
+        <div class="card-title" style="margin-bottom:0">⚡ Action Log</div>
+        <span class="step-count" id="step-count-badge">0 steps</span>
+      </div>
+      <div class="action-log" id="action-log"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API_BASE = window.location.origin;
+
+  // Fetch model name on load
+  fetch(`${API_BASE}/health`)
+    .then(r => r.json())
+    .then(d => {
+      if (d.model) {
+        document.getElementById('header-model-badge').textContent = `Groq · ${d.model.split('/').pop()}`;
+      }
+    })
+    .catch(() => {});
+
+  const EXAMPLES = [
+    {
+      title: "📚 Books & Prices",
+      task: "List the top 5 books with their prices from the homepage",
+      url: "https://books.toscrape.com"
+    },
+    {
+      title: "🧭 Category Navigation",
+      task: "Click on the 'Travel' category and list all book titles under Travel with their prices",
+      url: "https://books.toscrape.com"
+    },
+    {
+      title: "🔍 Book Detail & UPC",
+      task: "Click on the first book 'A Light in the Attic' and extract its UPC code, price, and availability",
+      url: "https://books.toscrape.com"
+    },
+    {
+      title: "💬 Quotes & Authors",
+      task: "Extract the first 3 quotes with their authors",
+      url: "https://quotes.toscrape.com"
+    },
+    {
+      title: "🏷️ Tag Filtering",
+      task: "Click on the 'love' tag and extract the top quotes in that category",
+      url: "https://quotes.toscrape.com"
+    },
+    {
+      title: "🔥 Top Stories",
+      task: "List the top 5 news stories and their link titles from the front page",
+      url: "https://news.ycombinator.com"
+    },
+    {
+      title: "📖 Wikipedia Search",
+      task: "Find the Wikipedia summary of 'Artificial intelligence' and return the first paragraph",
+      url: "https://en.wikipedia.org/wiki/Artificial_intelligence"
+    },
+    {
+      title: "⏭️ Pagination (Next Page)",
+      task: "Click the 'next' button to navigate to page 2 and list the first 3 books on page 2",
+      url: "https://books.toscrape.com"
+    }
+  ];
+
+  // Populate example buttons
+  const examplesEl = document.getElementById("examples");
+  EXAMPLES.forEach(ex => {
+    const btn = document.createElement("button");
+    btn.className = "example-btn";
+    btn.textContent = ex.title;
+    btn.title = ex.task;
+    btn.onclick = () => {
+      document.getElementById("task-input").value = ex.task;
+      document.getElementById("url-input").value = ex.url;
+    };
+    examplesEl.appendChild(btn);
+  });
+
+  const ACTION_COLORS = {
+    click: "#7c3aed",
+    navigate: "#06b6d4",
+    type_text: "#f59e0b",
+    extract_text: "#10b981",
+    scroll: "#64748b",
+    done: "#10b981",
+  };
+
+  async function runTask() {
+    const task = document.getElementById("task-input").value.trim();
+    const startUrl = document.getElementById("url-input").value.trim();
+    const maxSteps = parseInt(document.getElementById("steps-input").value) || 20;
+
+    if (!task) {
+      alert("Please enter a task description.");
+      return;
+    }
+
+    // Reset UI
+    setRunning(true);
+    document.getElementById("action-log").innerHTML = "";
+    document.getElementById("result-text").textContent = "";
+    document.getElementById("status-section").style.display = "block";
+    document.getElementById("result-card").style.display = "none";
+    document.getElementById("log-card").style.display = "none";
+    setStatus("running", `Running agent on: "${task.slice(0, 60)}"`);
+
+    try {
+      const response = await fetch(`${API_BASE}/run-task`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          task,
+          start_url: startUrl,
+          headless: true,
+          max_steps: maxSteps,
+        }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.detail || `HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // Show action log
+      if (data.action_log && data.action_log.length > 0) {
+        document.getElementById("log-card").style.display = "block";
+        document.getElementById("step-count-badge").textContent =
+          `${data.steps_taken} steps`;
+        data.action_log.forEach(renderActionItem);
+      }
+
+      // Show result
+      document.getElementById("result-card").style.display = "block";
+      document.getElementById("result-text").textContent =
+        data.result || "(No result returned)";
+
+      if (data.success) {
+        setStatus("success", `✅ Task completed in ${data.steps_taken} steps`);
+      } else {
+        setStatus("error", `⚠️ Task ended after ${data.steps_taken} steps (step cap or error)`);
+      }
+
+    } catch (err) {
+      setStatus("error", `❌ Error: ${err.message}`);
+      document.getElementById("result-card").style.display = "block";
+      document.getElementById("result-text").textContent = err.message;
+    } finally {
+      setRunning(false);
+    }
+  }
+
+  function renderActionItem(record) {
+    const log = document.getElementById("action-log");
+    const item = document.createElement("div");
+    const atype = (record.action_type || "unknown").toLowerCase();
+    item.className = `action-item ${atype}`;
+
+    const target = record.target ? `→ ${record.target.slice(0, 60)}` : "";
+    const val = record.value ? `"${record.value.slice(0, 50)}"` : "";
+    const detail = [target, val].filter(Boolean).join(" ");
+
+    item.innerHTML = `
+      <span class="step-num">#${record.step}</span>
+      <span class="action-type" style="color:${ACTION_COLORS[atype] || '#e2e8f0'}">${atype}</span>
+      <span class="action-detail">${detail || record.result_summary?.slice(0, 80) || ""}</span>
+    `;
+    log.appendChild(item);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function setStatus(type, message) {
+    const bar = document.getElementById("status-bar");
+    const spinner = document.getElementById("spinner");
+    const text = document.getElementById("status-text");
+
+    bar.className = `status-bar ${type}`;
+    text.textContent = message;
+    spinner.style.display = type === "running" ? "block" : "none";
+  }
+
+  function setRunning(running) {
+    const btn = document.getElementById("run-btn");
+    document.getElementById("btn-icon").textContent = running ? "⏳" : "▶";
+    document.getElementById("btn-text").textContent = running ? "Agent Running..." : "Run Agent";
+    btn.disabled = running;
+  }
+</script>
+</body>
+</html>
