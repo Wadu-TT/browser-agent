@@ -2,607 +2,1173 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Browser Agent</title>
-  <meta name="description" content="AI-powered browser automation agent — control any website with natural language instructions." />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>NexusAI · Autonomous Browser Agent</title>
+  <meta name="description" content="Next-gen AI browser automation agent powered by Groq and Playwright. Automate navigation, data extraction, and web interactions." />
+  
+  <!-- Modern Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
   <style>
     :root {
-      --bg: #0a0a0f;
-      --surface: #12121a;
-      --surface-2: #1a1a26;
-      --border: #2a2a3d;
-      --accent: #7c3aed;
-      --accent-glow: rgba(124, 58, 237, 0.25);
-      --accent-2: #06b6d4;
-      --text: #e2e8f0;
+      --bg: #07090e;
+      --bg-gradient: radial-gradient(circle at 50% 0%, rgba(124, 58, 237, 0.18) 0%, rgba(6, 182, 212, 0.12) 35%, rgba(7, 9, 14, 0.95) 75%);
+      --surface: rgba(18, 22, 34, 0.75);
+      --surface-elevated: rgba(26, 32, 50, 0.85);
+      --surface-input: rgba(13, 16, 26, 0.9);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(139, 92, 246, 0.6);
+      --border-glow: rgba(139, 92, 246, 0.25);
+      
+      --accent-violet: #8b5cf6;
+      --accent-cyan: #06b6d4;
+      --accent-pink: #ec4899;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-red: #f43f5e;
+      
+      --gradient-primary: linear-gradient(135deg, #8b5cf6 0%, #d946ef 50%, #06b6d4 100%);
+      --gradient-btn: linear-gradient(135deg, #7c3aed 0%, #6366f1 50%, #06b6d4 100%);
+      --gradient-glow: linear-gradient(135deg, rgba(124, 58, 237, 0.5), rgba(6, 182, 212, 0.5));
+      
+      --text: #f8fafc;
+      --text-secondary: #94a3b8;
       --text-muted: #64748b;
-      --success: #10b981;
-      --error: #ef4444;
-      --warning: #f59e0b;
-      --radius: 12px;
+      
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-full: 9999px;
+      
+      --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
+      --shadow-btn: 0 10px 25px -5px rgba(124, 58, 237, 0.5), 0 8px 10px -6px rgba(6, 182, 212, 0.4);
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
 
     body {
-      font-family: 'Inter', sans-serif;
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
       background: var(--bg);
+      background-image: var(--bg-gradient);
+      background-attachment: fixed;
       color: var(--text);
       min-height: 100vh;
-      background-image:
-        radial-gradient(ellipse at 20% 50%, rgba(124, 58, 237, 0.08) 0%, transparent 60%),
-        radial-gradient(ellipse at 80% 20%, rgba(6, 182, 212, 0.06) 0%, transparent 50%);
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      line-height: 1.5;
+    }
+
+    /* ── Ambient Background Glows ── */
+    .ambient-orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(90px);
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.45;
+      animation: floatOrb 18s ease-in-out infinite alternate;
+    }
+    .orb-1 {
+      top: -100px;
+      left: -80px;
+      width: 380px;
+      height: 380px;
+      background: radial-gradient(circle, #7c3aed 0%, rgba(124, 58, 237, 0) 70%);
+    }
+    .orb-2 {
+      top: 25%;
+      right: -120px;
+      width: 420px;
+      height: 420px;
+      background: radial-gradient(circle, #06b6d4 0%, rgba(6, 182, 212, 0) 70%);
+      animation-delay: -6s;
+    }
+    .orb-3 {
+      bottom: -150px;
+      left: 30%;
+      width: 450px;
+      height: 450px;
+      background: radial-gradient(circle, #ec4899 0%, rgba(236, 72, 153, 0) 70%);
+      animation-delay: -12s;
+    }
+
+    @keyframes floatOrb {
+      0% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(30px, 40px) scale(1.1); }
+      100% { transform: translate(-20px, 20px) scale(0.95); }
     }
 
     /* ── Header ── */
     header {
-      border-bottom: 1px solid var(--border);
-      padding: 1.2rem 2rem;
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      background: rgba(18, 18, 26, 0.8);
-      backdrop-filter: blur(10px);
       position: sticky;
       top: 0;
-      z-index: 100;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.9rem 1.5rem;
+      background: rgba(7, 9, 14, 0.7);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
     }
 
-    .logo {
-      width: 36px; height: 36px;
-      background: linear-gradient(135deg, var(--accent), var(--accent-2));
-      border-radius: 8px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 18px;
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: inherit;
     }
 
-    header h1 {
-      font-size: 1.1rem;
-      font-weight: 600;
-      background: linear-gradient(90deg, var(--text), var(--accent-2));
+    .logo-container {
+      position: relative;
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius-md);
+      background: var(--gradient-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 15px rgba(139, 92, 246, 0.5);
+    }
+
+    .logo-icon {
+      font-size: 20px;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+    }
+
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #ffffff 30%, #a5b4fc 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
-    .badge {
-      margin-left: auto;
-      padding: 4px 12px;
-      border-radius: 999px;
-      font-size: 0.72rem;
-      font-weight: 500;
-      border: 1px solid var(--border);
+    .brand-subtitle {
+      font-size: 0.68rem;
       color: var(--text-muted);
-      display: flex; align-items: center; gap: 6px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
     }
 
-    .badge .dot {
-      width: 6px; height: 6px;
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: var(--radius-full);
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #34d399;
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.15);
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
-      background: var(--success);
-      animation: pulse 2s infinite;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+      animation: pulseGreen 2s infinite ease-in-out;
     }
 
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
+    @keyframes pulseGreen {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.85); }
     }
 
-    /* ── Layout ── */
-    .container {
-      max-width: 900px;
+    /* ── Main Container ── */
+    main {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 960px;
       margin: 0 auto;
-      padding: 2.5rem 1.5rem;
+      padding: 2rem 1.25rem 4rem;
+      flex: 1;
     }
 
+    /* ── Hero Banner ── */
     .hero {
       text-align: center;
-      margin-bottom: 3rem;
+      margin-bottom: 2rem;
     }
 
-    .hero h2 {
-      font-size: 2.4rem;
-      font-weight: 700;
-      line-height: 1.2;
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 14px;
+      border-radius: var(--radius-full);
+      background: rgba(139, 92, 246, 0.12);
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      color: #c084fc;
+      font-size: 0.78rem;
+      font-weight: 600;
+      margin-bottom: 0.85rem;
+      letter-spacing: 0.02em;
+    }
+
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.1rem);
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
       margin-bottom: 0.75rem;
-      background: linear-gradient(135deg, var(--text) 0%, var(--accent-2) 100%);
+      background: linear-gradient(135deg, #ffffff 20%, #cbd5e1 50%, #38bdf8 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
     .hero p {
-      color: var(--text-muted);
-      font-size: 1rem;
-      max-width: 520px;
+      color: var(--text-secondary);
+      font-size: clamp(0.92rem, 2.5vw, 1.05rem);
+      max-width: 580px;
       margin: 0 auto;
+      font-weight: 400;
     }
 
-    /* ── Card ── */
-    .card {
+    /* ── Glass Card ── */
+    .glass-card {
       background: var(--surface);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
+      border-radius: var(--radius-lg);
       padding: 1.75rem;
       margin-bottom: 1.5rem;
+      box-shadow: var(--shadow-glass);
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .glass-card:hover {
+      border-color: rgba(255, 255, 255, 0.12);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
     }
 
     .card-title {
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.95rem;
+      font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.07em;
-      margin-bottom: 1rem;
+      letter-spacing: 0.06em;
+      color: #cbd5e1;
     }
 
-    /* ── Form ── */
-    label {
-      display: block;
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: var(--text);
-      margin-bottom: 0.4rem;
+    .card-title-icon {
+      font-size: 1.1rem;
     }
 
-    .field { margin-bottom: 1.2rem; }
+    /* ── Quick Categories & Pills ── */
+    .category-tabs {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      overflow-x: auto;
+      padding-bottom: 0.5rem;
+      margin-bottom: 0.75rem;
+      scrollbar-width: none;
+    }
+    .category-tabs::-webkit-scrollbar { display: none; }
 
-    input[type="text"],
-    input[type="url"],
-    textarea {
-      width: 100%;
-      background: var(--surface-2);
+    .category-tab {
+      background: rgba(255, 255, 255, 0.04);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-      font-family: inherit;
-      font-size: 0.9rem;
-      padding: 0.7rem 1rem;
-      outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
+      border-radius: var(--radius-full);
+      padding: 4px 12px;
+      font-size: 0.74rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s ease;
     }
 
-    input:focus, textarea:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-glow);
+    .category-tab.active,
+    .category-tab:hover {
+      background: rgba(139, 92, 246, 0.2);
+      border-color: var(--accent-violet);
+      color: #e2e8f0;
     }
 
-    textarea { resize: vertical; min-height: 80px; }
-
-    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-
-    @media (max-width: 600px) { .row { grid-template-columns: 1fr; } }
-
-    .hint {
-      font-size: 0.78rem;
-      color: var(--text-muted);
-      margin-top: 0.3rem;
-    }
-
-    /* ── Examples ── */
-    .examples {
+    .presets-grid {
       display: flex;
       flex-wrap: wrap;
       gap: 0.5rem;
-      margin-bottom: 1.2rem;
+      margin-bottom: 1.4rem;
     }
 
-    .example-btn {
-      background: var(--surface-2);
+    .preset-chip {
+      background: var(--surface-elevated);
       border: 1px solid var(--border);
-      border-radius: 999px;
-      color: var(--text-muted);
-      font-size: 0.78rem;
-      padding: 5px 12px;
+      border-radius: var(--radius-full);
+      padding: 6px 14px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-secondary);
       cursor: pointer;
-      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
     }
 
-    .example-btn:hover {
-      border-color: var(--accent);
+    .preset-chip:hover {
+      background: rgba(139, 92, 246, 0.15);
+      border-color: var(--accent-violet);
       color: var(--text);
-      background: var(--accent-glow);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
     }
 
-    /* ── Button ── */
-    #run-btn {
-      width: 100%;
-      padding: 0.875rem;
-      background: linear-gradient(135deg, var(--accent), #5b21b6);
-      border: none;
-      border-radius: 10px;
-      color: white;
-      font-size: 0.95rem;
+    .preset-chip:active {
+      transform: translateY(0);
+    }
+
+    /* ── Form Inputs ── */
+    .field-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .field-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+      font-size: 0.875rem;
       font-weight: 600;
+      color: #e2e8f0;
+    }
+
+    .field-label-hint {
+      font-size: 0.75rem;
+      font-weight: 400;
+      color: var(--text-muted);
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    textarea, input[type="url"], input[type="number"], input[type="text"] {
+      width: 100%;
+      background: var(--surface-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 0.85rem 1.1rem;
+      font-family: inherit;
+      font-size: 0.93rem;
+      color: var(--text);
+      outline: none;
+      transition: all 0.25s ease;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    textarea:focus, input:focus {
+      border-color: var(--accent-violet);
+      box-shadow: 0 0 0 3px var(--border-glow), inset 0 2px 4px rgba(0, 0, 0, 0.3);
+      background: rgba(18, 22, 38, 0.95);
+    }
+
+    textarea {
+      min-height: 95px;
+      resize: vertical;
+      line-height: 1.6;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1rem;
+    }
+
+    @media (max-width: 640px) {
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ── Action Buttons ── */
+    .form-actions {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+
+    .btn-primary {
+      flex: 1;
+      padding: 0.95rem 1.5rem;
+      background: var(--gradient-btn);
+      border: none;
+      border-radius: var(--radius-md);
+      color: #ffffff;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
       cursor: pointer;
-      transition: all 0.2s;
-      display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      box-shadow: var(--shadow-btn);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
       position: relative;
       overflow: hidden;
     }
 
-    #run-btn:hover:not(:disabled) {
-      transform: translateY(-1px);
-      box-shadow: 0 8px 25px rgba(124, 58, 237, 0.4);
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 30px -5px rgba(124, 58, 237, 0.6), 0 10px 15px -5px rgba(6, 182, 212, 0.5);
+      filter: brightness(1.1);
     }
 
-    #run-btn:disabled {
-      opacity: 0.6;
+    .btn-primary:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.65;
       cursor: not-allowed;
       transform: none;
+      filter: grayscale(0.2);
     }
 
-    /* ── Status / Result ── */
-    #status-section { display: none; }
-
-    .status-bar {
+    .btn-secondary {
+      padding: 0.95rem 1.25rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
       display: flex;
       align-items: center;
-      gap: 0.75rem;
-      padding: 0.9rem 1.2rem;
-      border-radius: 10px;
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      margin-bottom: 1rem;
-      font-size: 0.875rem;
+      gap: 0.4rem;
     }
 
-    .status-bar.running { border-color: var(--accent); }
-    .status-bar.success { border-color: var(--success); }
-    .status-bar.error { border-color: var(--error); }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
 
-    .spinner {
-      width: 16px; height: 16px;
-      border: 2px solid var(--border);
-      border-top-color: var(--accent);
+    /* ── Progress & Status Bar ── */
+    #status-section {
+      display: none;
+      animation: slideUp 0.35s ease forwards;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .status-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.25rem;
+      border-radius: var(--radius-md);
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      margin-bottom: 1.25rem;
+      gap: 1rem;
+    }
+
+    .status-left {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      overflow: hidden;
+    }
+
+    .spinner-ring {
+      width: 22px;
+      height: 22px;
+      border: 2.5px solid rgba(139, 92, 246, 0.2);
+      border-top-color: var(--accent-cyan);
+      border-right-color: var(--accent-violet);
       border-radius: 50%;
-      animation: spin 0.8s linear infinite;
+      animation: spin 0.75s linear infinite;
       flex-shrink: 0;
     }
 
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    .status-icon { font-size: 16px; flex-shrink: 0; }
+    .status-message {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #f1f5f9;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
 
-    .result-box {
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 1.2rem;
+    .status-timer {
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.82rem;
-      line-height: 1.6;
+      font-weight: 600;
+      color: var(--accent-cyan);
+      background: rgba(6, 182, 212, 0.1);
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+      border: 1px solid rgba(6, 182, 212, 0.25);
+      flex-shrink: 0;
+    }
+
+    .status-banner.running {
+      border-color: rgba(139, 92, 246, 0.5);
+      background: linear-gradient(90deg, rgba(124, 58, 237, 0.12), rgba(6, 182, 212, 0.08));
+    }
+
+    .status-banner.success {
+      border-color: rgba(16, 185, 129, 0.4);
+      background: rgba(16, 185, 129, 0.08);
+    }
+
+    .status-banner.error {
+      border-color: rgba(244, 63, 94, 0.4);
+      background: rgba(244, 63, 94, 0.08);
+    }
+
+    /* ── Results Box ── */
+    .result-container {
+      position: relative;
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border);
+      color: #cbd5e1;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s ease;
+      z-index: 2;
+    }
+
+    .copy-btn:hover {
+      background: rgba(139, 92, 246, 0.25);
+      border-color: var(--accent-violet);
+      color: #ffffff;
+    }
+
+    .result-content {
+      background: rgba(10, 13, 22, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88rem;
+      line-height: 1.65;
+      color: #e2e8f0;
       white-space: pre-wrap;
       word-break: break-word;
-      max-height: 300px;
+      max-height: 380px;
       overflow-y: auto;
-      color: var(--text);
     }
 
-    /* ── Action Log ── */
-    .steps-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 0.75rem;
-    }
-
-    .step-count {
-      background: var(--accent);
-      color: white;
-      font-size: 0.72rem;
-      font-weight: 600;
-      padding: 2px 8px;
-      border-radius: 999px;
-    }
-
-    .action-log {
+    /* ── Action Timeline ── */
+    .action-timeline {
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
-      max-height: 350px;
+      gap: 0.65rem;
+      max-height: 400px;
       overflow-y: auto;
+      padding-right: 4px;
     }
 
-    .action-item {
+    .timeline-item {
       display: flex;
-      gap: 0.75rem;
-      padding: 0.6rem 0.8rem;
-      background: var(--surface-2);
-      border-radius: 8px;
-      border-left: 3px solid var(--border);
-      font-size: 0.8rem;
-      animation: fadeIn 0.3s ease;
+      align-items: flex-start;
+      gap: 0.85rem;
+      padding: 0.8rem 1rem;
+      background: var(--surface-elevated);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent-violet);
+      font-size: 0.84rem;
+      transition: transform 0.2s ease;
+      animation: fadeIn 0.3s ease forwards;
+    }
+
+    .timeline-item:hover {
+      transform: translateX(3px);
+      background: rgba(30, 38, 60, 0.95);
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(4px); }
-      to   { opacity: 1; transform: translateY(0); }
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
-    .action-item.click    { border-color: var(--accent); }
-    .action-item.navigate { border-color: var(--accent-2); }
-    .action-item.type_text{ border-color: var(--warning); }
-    .action-item.extract_text { border-color: var(--success); }
-    .action-item.scroll   { border-color: var(--text-muted); }
-    .action-item.done     { border-color: var(--success); }
-
-    .step-num {
-      color: var(--text-muted);
-      font-family: 'JetBrains Mono', monospace;
-      flex-shrink: 0;
-      min-width: 28px;
-    }
-
-    .action-type {
-      font-weight: 600;
-      text-transform: uppercase;
+    .timeline-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: var(--radius-sm);
       font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
       flex-shrink: 0;
-      min-width: 80px;
     }
 
-    .action-detail { color: var(--text-muted); }
+    .timeline-step {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
 
-    /* Scrollbar styling */
-    ::-webkit-scrollbar { width: 5px; }
+    .timeline-body {
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .timeline-target {
+      font-weight: 600;
+      color: #f8fafc;
+      word-break: break-all;
+    }
+
+    .timeline-desc {
+      color: var(--text-secondary);
+      margin-top: 2px;
+      font-size: 0.8rem;
+    }
+
+    /* Action Badges */
+    .badge-navigate    { background: rgba(6, 182, 212, 0.15); color: #38bdf8; border: 1px solid rgba(6, 182, 212, 0.3); }
+    .badge-click       { background: rgba(139, 92, 246, 0.15); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.3); }
+    .badge-type_text   { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-extract_text{ background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-scroll      { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.3); }
+    .badge-done        { background: rgba(236, 72, 153, 0.15); color: #f472b6; border: 1px solid rgba(236, 72, 153, 0.3); }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      background: rgba(7, 9, 14, 0.5);
+    }
+
+    footer a {
+      color: var(--accent-cyan);
+      text-decoration: none;
+    }
+
+    /* ── Custom Scrollbars ── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.25); }
+
+    /* ── Mobile Optimization Tweaks ── */
+    @media (max-width: 480px) {
+      header {
+        padding: 0.75rem 1rem;
+      }
+      .brand-subtitle { display: none; }
+      main {
+        padding: 1.25rem 0.85rem 3rem;
+      }
+      .glass-card {
+        padding: 1.25rem 1rem;
+        border-radius: var(--radius-md);
+      }
+      .hero h1 {
+        font-size: 1.85rem;
+      }
+      .btn-primary {
+        padding: 0.85rem 1.2rem;
+        font-size: 0.95rem;
+      }
+      .preset-chip {
+        font-size: 0.76rem;
+        padding: 5px 11px;
+      }
+    }
   </style>
 </head>
 <body>
 
-<header>
-  <div class="logo">🤖</div>
-  <h1>AI Browser Agent</h1>
-  <div class="badge">
-    <span class="dot"></span>
-    <span id="header-model-badge">Groq Agent</span>
-  </div>
-</header>
+  <!-- Ambient background glow elements -->
+  <div class="ambient-orb orb-1"></div>
+  <div class="ambient-orb orb-2"></div>
+  <div class="ambient-orb orb-3"></div>
 
-<div class="container">
-  <!-- Hero -->
-  <div class="hero">
-    <h2>Browse the Web with AI</h2>
-    <p>Give a natural language task — the agent navigates, clicks, types, and extracts data automatically.</p>
-  </div>
-
-  <!-- Task Form -->
-  <div class="card">
-    <div class="card-title">🎯 New Task</div>
-
-    <div class="field">
-      <label>Quick Examples</label>
-      <div class="examples" id="examples"></div>
-    </div>
-
-    <div class="field">
-      <label for="task-input">Task Description</label>
-      <textarea id="task-input" placeholder="e.g. Go to books.toscrape.com and list the top 5 books with their prices"></textarea>
-    </div>
-
-    <div class="row">
-      <div class="field">
-        <label for="url-input">Start URL</label>
-        <input type="url" id="url-input" value="https://books.toscrape.com" />
-        <div class="hint">The page the agent opens first</div>
+  <!-- Header -->
+  <header>
+    <a href="/" class="brand">
+      <div class="logo-container">
+        <span class="logo-icon">⚡</span>
       </div>
-      <div class="field">
-        <label for="steps-input">Max Steps</label>
-        <input type="text" id="steps-input" value="20" />
-        <div class="hint">Prevent infinite loops (5–30)</div>
+      <div>
+        <div class="brand-title">NexusAI</div>
+        <div class="brand-subtitle">Autonomous Browser</div>
+      </div>
+    </a>
+
+    <div class="header-actions">
+      <div class="status-pill" id="model-pill">
+        <span class="status-dot"></span>
+        <span id="model-name">Groq · Ready</span>
       </div>
     </div>
+  </header>
 
-    <button id="run-btn" onclick="runTask()">
-      <span id="btn-icon">▶</span>
-      <span id="btn-text">Run Agent</span>
-    </button>
-  </div>
-
-  <!-- Status + Results -->
-  <div id="status-section">
-    <div id="status-bar" class="status-bar">
-      <div class="spinner" id="spinner"></div>
-      <span id="status-text">Starting agent...</span>
-    </div>
-
-    <div class="card" id="result-card" style="display:none">
-      <div class="card-title">📋 Result</div>
-      <div class="result-box" id="result-text"></div>
-    </div>
-
-    <div class="card" id="log-card" style="display:none">
-      <div class="steps-header">
-        <div class="card-title" style="margin-bottom:0">⚡ Action Log</div>
-        <span class="step-count" id="step-count-badge">0 steps</span>
+  <!-- Main Content -->
+  <main>
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="hero-badge">
+        <span>✨ Powered by Groq & Playwright</span>
       </div>
-      <div class="action-log" id="action-log"></div>
+      <h1>Browse the Web with AI</h1>
+      <p>Instruct the agent in plain English — it perceives web pages, navigates, interacts with elements, and extracts structured data autonomously.</p>
+    </section>
+
+    <!-- Task Configuration Card -->
+    <section class="glass-card">
+      <div class="card-header">
+        <div class="card-title">
+          <span class="card-title-icon">🎯</span>
+          <span>Task Directive</span>
+        </div>
+      </div>
+
+      <!-- Category Filter Tabs -->
+      <div class="category-tabs" id="category-tabs">
+        <button class="category-tab active" onclick="filterPresets('all')">All Presets</button>
+        <button class="category-tab" onclick="filterPresets('scrape')">Web Scraping</button>
+        <button class="category-tab" onclick="filterPresets('leetcode')">LeetCode & Code</button>
+        <button class="category-tab" onclick="filterPresets('search')">Search & Wiki</button>
+        <button class="category-tab" onclick="filterPresets('nav')">Navigation</button>
+      </div>
+
+      <!-- Presets Chips -->
+      <div class="presets-grid" id="presets-grid"></div>
+
+      <!-- Task Form -->
+      <div class="field-group">
+        <div class="field-label">
+          <span>Instruction</span>
+          <span class="field-label-hint">Be specific about what data to extract</span>
+        </div>
+        <div class="input-wrapper">
+          <textarea id="task-input" placeholder="e.g. Go to https://books.toscrape.com, find the top 5 books with 5-star rating, and extract their titles and prices."></textarea>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field-group">
+          <div class="field-label">
+            <span>Start URL</span>
+            <span class="field-label-hint">Initial entrypoint</span>
+          </div>
+          <input type="url" id="url-input" value="https://books.toscrape.com" placeholder="https://..." />
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">
+            <span>Max Steps</span>
+            <span class="field-label-hint">Step cap (5–30)</span>
+          </div>
+          <input type="number" id="steps-input" value="20" min="5" max="30" />
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn-primary" id="run-btn" onclick="runTask()">
+          <span id="btn-icon">⚡</span>
+          <span id="btn-text">Execute Agent Task</span>
+        </button>
+        <button class="btn-secondary" onclick="resetForm()" title="Clear inputs">
+          <span>🔄</span>
+          <span>Reset</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Execution Status & Results -->
+    <div id="status-section">
+      <!-- Status Banner -->
+      <div id="status-banner" class="status-banner running">
+        <div class="status-left">
+          <div class="spinner-ring" id="spinner"></div>
+          <div class="status-message" id="status-message">Agent is initializing...</div>
+        </div>
+        <div class="status-timer" id="status-timer">00:00.0</div>
+      </div>
+
+      <!-- Result Card -->
+      <section class="glass-card" id="result-card" style="display:none">
+        <div class="card-header">
+          <div class="card-title">
+            <span class="card-title-icon">📋</span>
+            <span>Extracted Result</span>
+          </div>
+          <button class="copy-btn" id="copy-btn" onclick="copyResult()">
+            <span id="copy-icon">📄</span>
+            <span id="copy-text">Copy</span>
+          </button>
+        </div>
+        <div class="result-container">
+          <div class="result-content" id="result-content"></div>
+        </div>
+      </section>
+
+      <!-- Action Timeline Card -->
+      <section class="glass-card" id="timeline-card" style="display:none">
+        <div class="card-header">
+          <div class="card-title">
+            <span class="card-title-icon">⚡</span>
+            <span>Execution Timeline</span>
+          </div>
+          <span class="timeline-step" id="timeline-count">0 Steps</span>
+        </div>
+        <div class="action-timeline" id="action-timeline"></div>
+      </section>
     </div>
-  </div>
-</div>
+  </main>
 
-<script>
-  const API_BASE = window.location.origin;
+  <!-- Footer -->
+  <footer>
+    NexusAI Browser Automation Agent · Built with <strong>FastAPI</strong>, <strong>Playwright</strong> & <strong>Groq API</strong>
+  </footer>
 
-  // Fetch model name on load
-  fetch(`${API_BASE}/health`)
-    .then(r => r.json())
-    .then(d => {
-      if (d.model) {
-        document.getElementById('header-model-badge').textContent = `Groq · ${d.model.split('/').pop()}`;
+  <script>
+    const API_BASE = window.location.origin;
+    let timerInterval = null;
+    let startTime = null;
+
+    // Preset Tasks Database
+    const PRESETS = [
+      {
+        category: "scrape",
+        icon: "📚",
+        label: "Book Prices & Stock",
+        task: "List the top 5 books with their prices and stock status from the homepage",
+        url: "https://books.toscrape.com"
+      },
+      {
+        category: "leetcode",
+        icon: "🧩",
+        label: "LeetCode: Hand of Straights",
+        task: "Extract the problem description, Example 1, Example 2, and constraints",
+        url: "https://leetcode.com/problems/hand-of-straights/description/"
+      },
+      {
+        category: "search",
+        icon: "📖",
+        label: "Wikipedia: AI Summary",
+        task: "Extract the first introductory paragraph of the page",
+        url: "https://en.wikipedia.org/wiki/Artificial_intelligence"
+      },
+      {
+        category: "nav",
+        icon: "🔥",
+        label: "Hacker News: Top Stories",
+        task: "List the top 5 news titles with their points and author from the front page",
+        url: "https://news.ycombinator.com"
+      },
+      {
+        category: "scrape",
+        icon: "💬",
+        label: "Quotes & Authors",
+        task: "Extract the first 3 quotes along with their respective authors",
+        url: "https://quotes.toscrape.com"
+      },
+      {
+        category: "nav",
+        icon: "🧭",
+        label: "Category Navigation",
+        task: "Click on the 'Travel' category link and list all book titles under Travel",
+        url: "https://books.toscrape.com"
+      },
+      {
+        category: "leetcode",
+        icon: "🏷️",
+        label: "LeetCode: Two Sum",
+        task: "Extract the difficulty level, problem description, and Example 1",
+        url: "https://leetcode.com/problems/two-sum/description/"
+      },
+      {
+        category: "nav",
+        icon: "⏭️",
+        label: "Pagination Test",
+        task: "Click the 'next' page button and list the first 3 books on page 2",
+        url: "https://books.toscrape.com"
       }
-    })
-    .catch(() => {});
+    ];
 
-  const EXAMPLES = [
-    {
-      title: "📚 Books & Prices",
-      task: "List the top 5 books with their prices from the homepage",
-      url: "https://books.toscrape.com"
-    },
-    {
-      title: "🧭 Category Navigation",
-      task: "Click on the 'Travel' category and list all book titles under Travel with their prices",
-      url: "https://books.toscrape.com"
-    },
-    {
-      title: "🔍 Book Detail & UPC",
-      task: "Click on the first book 'A Light in the Attic' and extract its UPC code, price, and availability",
-      url: "https://books.toscrape.com"
-    },
-    {
-      title: "💬 Quotes & Authors",
-      task: "Extract the first 3 quotes with their authors",
-      url: "https://quotes.toscrape.com"
-    },
-    {
-      title: "🏷️ Tag Filtering",
-      task: "Click on the 'love' tag and extract the top quotes in that category",
-      url: "https://quotes.toscrape.com"
-    },
-    {
-      title: "🔥 Top Stories",
-      task: "List the top 5 news stories and their link titles from the front page",
-      url: "https://news.ycombinator.com"
-    },
-    {
-      title: "📖 Wikipedia Search",
-      task: "Find the Wikipedia summary of 'Artificial intelligence' and return the first paragraph",
-      url: "https://en.wikipedia.org/wiki/Artificial_intelligence"
-    },
-    {
-      title: "⏭️ Pagination (Next Page)",
-      task: "Click the 'next' button to navigate to page 2 and list the first 3 books on page 2",
-      url: "https://books.toscrape.com"
-    }
-  ];
-
-  // Populate example buttons
-  const examplesEl = document.getElementById("examples");
-  EXAMPLES.forEach(ex => {
-    const btn = document.createElement("button");
-    btn.className = "example-btn";
-    btn.textContent = ex.title;
-    btn.title = ex.task;
-    btn.onclick = () => {
-      document.getElementById("task-input").value = ex.task;
-      document.getElementById("url-input").value = ex.url;
-    };
-    examplesEl.appendChild(btn);
-  });
-
-  const ACTION_COLORS = {
-    click: "#7c3aed",
-    navigate: "#06b6d4",
-    type_text: "#f59e0b",
-    extract_text: "#10b981",
-    scroll: "#64748b",
-    done: "#10b981",
-  };
-
-  async function runTask() {
-    const task = document.getElementById("task-input").value.trim();
-    const startUrl = document.getElementById("url-input").value.trim();
-    const maxSteps = parseInt(document.getElementById("steps-input").value) || 20;
-
-    if (!task) {
-      alert("Please enter a task description.");
-      return;
-    }
-
-    // Reset UI
-    setRunning(true);
-    document.getElementById("action-log").innerHTML = "";
-    document.getElementById("result-text").textContent = "";
-    document.getElementById("status-section").style.display = "block";
-    document.getElementById("result-card").style.display = "none";
-    document.getElementById("log-card").style.display = "none";
-    setStatus("running", `Running agent on: "${task.slice(0, 60)}"`);
-
-    try {
-      const response = await fetch(`${API_BASE}/run-task`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          task,
-          start_url: startUrl,
-          headless: true,
-          max_steps: maxSteps,
-        }),
+    // Initial Health & Model check
+    fetch(`${API_BASE}/health`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.model) {
+          const cleanModel = data.model.split('/').pop();
+          document.getElementById('model-name').textContent = `Groq · ${cleanModel}`;
+        }
+      })
+      .catch(() => {
+        document.getElementById('model-name').textContent = 'Groq · Offline';
+        document.getElementById('model-pill').style.color = '#f43f5e';
       });
 
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.detail || `HTTP ${response.status}`);
-      }
+    // Populate Presets
+    function renderPresets(category = 'all') {
+      const grid = document.getElementById('presets-grid');
+      grid.innerHTML = '';
+      
+      const filtered = category === 'all' 
+        ? PRESETS 
+        : PRESETS.filter(p => p.category === category);
 
-      const data = await response.json();
-
-      // Show action log
-      if (data.action_log && data.action_log.length > 0) {
-        document.getElementById("log-card").style.display = "block";
-        document.getElementById("step-count-badge").textContent =
-          `${data.steps_taken} steps`;
-        data.action_log.forEach(renderActionItem);
-      }
-
-      // Show result
-      document.getElementById("result-card").style.display = "block";
-      document.getElementById("result-text").textContent =
-        data.result || "(No result returned)";
-
-      if (data.success) {
-        setStatus("success", `✅ Task completed in ${data.steps_taken} steps`);
-      } else {
-        setStatus("error", `⚠️ Task ended after ${data.steps_taken} steps (step cap or error)`);
-      }
-
-    } catch (err) {
-      setStatus("error", `❌ Error: ${err.message}`);
-      document.getElementById("result-card").style.display = "block";
-      document.getElementById("result-text").textContent = err.message;
-    } finally {
-      setRunning(false);
+      filtered.forEach(p => {
+        const chip = document.createElement('div');
+        chip.className = 'preset-chip';
+        chip.innerHTML = `<span>${p.icon}</span> <span>${p.label}</span>`;
+        chip.onclick = () => {
+          document.getElementById('task-input').value = p.task;
+          document.getElementById('url-input').value = p.url;
+          // Smooth scroll to input if mobile
+          if (window.innerWidth < 640) {
+            document.getElementById('task-input').scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        };
+        grid.appendChild(chip);
+      });
     }
-  }
 
-  function renderActionItem(record) {
-    const log = document.getElementById("action-log");
-    const item = document.createElement("div");
-    const atype = (record.action_type || "unknown").toLowerCase();
-    item.className = `action-item ${atype}`;
+    function filterPresets(cat) {
+      document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+      event.target.classList.add('active');
+      renderPresets(cat);
+    }
 
-    const target = record.target ? `→ ${record.target.slice(0, 60)}` : "";
-    const val = record.value ? `"${record.value.slice(0, 50)}"` : "";
-    const detail = [target, val].filter(Boolean).join(" ");
+    renderPresets('all');
 
-    item.innerHTML = `
-      <span class="step-num">#${record.step}</span>
-      <span class="action-type" style="color:${ACTION_COLORS[atype] || '#e2e8f0'}">${atype}</span>
-      <span class="action-detail">${detail || record.result_summary?.slice(0, 80) || ""}</span>
-    `;
-    log.appendChild(item);
-    log.scrollTop = log.scrollHeight;
-  }
+    // Timer functions
+    function startTimer() {
+      startTime = Date.now();
+      const timerEl = document.getElementById('status-timer');
+      timerInterval = setInterval(() => {
+        const elapsed = (Date.now() - startTime) / 1000;
+        const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');
+        const secs = (elapsed % 60).toFixed(1).padStart(4, '0');
+        timerEl.textContent = `${mins}:${secs}s`;
+      }, 100);
+    }
 
-  function setStatus(type, message) {
-    const bar = document.getElementById("status-bar");
-    const spinner = document.getElementById("spinner");
-    const text = document.getElementById("status-text");
+    function stopTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+    }
 
-    bar.className = `status-bar ${type}`;
-    text.textContent = message;
-    spinner.style.display = type === "running" ? "block" : "none";
-  }
+    // Run Task Execution
+    async function runTask() {
+      const task = document.getElementById('task-input').value.trim();
+      const startUrl = document.getElementById('url-input').value.trim();
+      const maxSteps = parseInt(document.getElementById('steps-input').value) || 20;
 
-  function setRunning(running) {
-    const btn = document.getElementById("run-btn");
-    document.getElementById("btn-icon").textContent = running ? "⏳" : "▶";
-    document.getElementById("btn-text").textContent = running ? "Agent Running..." : "Run Agent";
-    btn.disabled = running;
-  }
-</script>
+      if (!task) {
+        alert('Please enter an agent instruction or pick a preset above.');
+        document.getElementById('task-input').focus();
+        return;
+      }
+
+      // UI Reset
+      setExecuting(true);
+      document.getElementById('status-section').style.display = 'block';
+      document.getElementById('result-card').style.display = 'none';
+      document.getElementById('timeline-card').style.display = 'none';
+      document.getElementById('action-timeline').innerHTML = '';
+      
+      const banner = document.getElementById('status-banner');
+      banner.className = 'status-banner running';
+      document.getElementById('spinner').style.display = 'block';
+      document.getElementById('status-message').textContent = `Agent executing: "${task.slice(0, 50)}..."`;
+      
+      startTimer();
+
+      try {
+        const response = await fetch(`${API_BASE}/run-task`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            task,
+            start_url: startUrl,
+            headless: true,
+            max_steps: maxSteps,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.detail || `HTTP ${response.status}`);
+        }
+
+        // Render Action Timeline
+        if (data.action_log && data.action_log.length > 0) {
+          document.getElementById('timeline-card').style.display = 'block';
+          document.getElementById('timeline-count').textContent = `${data.steps_taken} Steps Taken`;
+          data.action_log.forEach(renderTimelineItem);
+        }
+
+        // Render Result Box
+        document.getElementById('result-card').style.display = 'block';
+        document.getElementById('result-content').textContent = data.result || '(No result returned)';
+
+        if (data.success) {
+          banner.className = 'status-banner success';
+          document.getElementById('spinner').style.display = 'none';
+          document.getElementById('status-message').textContent = `✓ Task completed successfully in ${data.steps_taken} steps`;
+        } else {
+          banner.className = 'status-banner error';
+          document.getElementById('spinner').style.display = 'none';
+          document.getElementById('status-message').textContent = `⚠️ Task finished after ${data.steps_taken} steps (${data.error || 'Check timeline'})`;
+        }
+
+      } catch (err) {
+        banner.className = 'status-banner error';
+        document.getElementById('spinner').style.display = 'none';
+        document.getElementById('status-message').textContent = `❌ Execution Error: ${err.message}`;
+        document.getElementById('result-card').style.display = 'block';
+        document.getElementById('result-content').textContent = err.message;
+      } finally {
+        stopTimer();
+        setExecuting(false);
+      }
+    }
+
+    const ACTION_ICONS = {
+      navigate: '🌐',
+      click: '👆',
+      type_text: '✍️',
+      extract_text: '📄',
+      scroll: '📜',
+      done: '🏁'
+    };
+
+    function renderTimelineItem(record) {
+      const container = document.getElementById('action-timeline');
+      const item = document.createElement('div');
+      const atype = (record.action_type || 'action').toLowerCase();
+      
+      item.className = 'timeline-item';
+      item.style.borderLeftColor = getActionColor(atype);
+
+      const targetText = record.target ? `Target: ${record.target}` : '';
+      const valText = record.value ? `Value: "${record.value}"` : '';
+      const summaryText = record.result_summary ? record.result_summary.slice(0, 100) : '';
+
+      item.innerHTML = `
+        <span class="timeline-step">#${record.step}</span>
+        <div class="timeline-badge badge-${atype}">
+          <span>${ACTION_ICONS[atype] || '⚡'}</span>
+          <span>${atype}</span>
+        </div>
+        <div class="timeline-body">
+          <div class="timeline-target">${targetText || valText || atype.toUpperCase()}</div>
+          <div class="timeline-desc">${summaryText}</div>
+        </div>
+      `;
+      container.appendChild(item);
+    }
+
+    function getActionColor(type) {
+      switch (type) {
+        case 'navigate': return '#06b6d4';
+        case 'click': return '#8b5cf6';
+        case 'type_text': return '#f59e0b';
+        case 'extract_text': return '#10b981';
+        case 'scroll': return '#64748b';
+        case 'done': return '#ec4899';
+        default: return '#8b5cf6';
+      }
+    }
+
+    function setExecuting(executing) {
+      const btn = document.getElementById('run-btn');
+      document.getElementById('btn-icon').textContent = executing ? '⏳' : '⚡';
+      document.getElementById('btn-text').textContent = executing ? 'Agent Processing...' : 'Execute Agent Task';
+      btn.disabled = executing;
+    }
+
+    function resetForm() {
+      document.getElementById('task-input').value = '';
+      document.getElementById('url-input').value = 'https://books.toscrape.com';
+      document.getElementById('steps-input').value = '20';
+      document.getElementById('status-section').style.display = 'none';
+      stopTimer();
+    }
+
+    function copyResult() {
+      const text = document.getElementById('result-content').textContent;
+      if (!text) return;
+      navigator.clipboard.writeText(text).then(() => {
+        const copyText = document.getElementById('copy-text');
+        const copyIcon = document.getElementById('copy-icon');
+        copyText.textContent = 'Copied!';
+        copyIcon.textContent = '✓';
+        setTimeout(() => {
+          copyText.textContent = 'Copy';
+          copyIcon.textContent = '📄';
+        }, 2000);
+      });
+    }
+  </script>
 </body>
 </html>
